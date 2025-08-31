@@ -1,18 +1,26 @@
-const port = 8000
+const fsPromises = require('node:fs/promises');
 
-const fsPromises = require('node:fs/promises')
+const dotenv = require('dotenv');
 
-const {setTours} = require("./controller/tours");
-const app = require("./app");
+dotenv.config({
+  path: ['.env', 'config.env'],
+});
 
-app.listen(port, async _ => {
+const { setTours } = require('./controller/tours');
 
-    try {
-        // TODO read file simple tours list
-        setTours(JSON.parse(await fsPromises.readFile(`${__dirname}/dev-data/data/tours-simple.json`, {encoding: 'utf8'})))
+const port = process.env.PORT || 1000;
 
-        console.log(`app is running on: http://localhost:${port}`)
-    } catch (e) {
-        console.log(e);
-    }
-})
+const app = require('./app');
+
+app.listen(port, async (_) => {
+  try {
+    // TODO read file simple tours list
+    setTours(
+      JSON.parse(await fsPromises.readFile(`${__dirname}/dev-data/data/tours-simple.json`, { encoding: 'utf8' })),
+    );
+
+    console.log(`app is running on: http://localhost:${port}`);
+  } catch (e) {
+    console.log(e);
+  }
+});
