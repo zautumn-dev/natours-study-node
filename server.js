@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const dotenvExpand = require('dotenv-expand');
 const mongoose = require('mongoose');
 
+const { setTours } = require('./controller/tours');
+
 // 识别.env中${}内容
 dotenvExpand.expand(
   dotenv.config({
@@ -11,11 +13,10 @@ dotenvExpand.expand(
   }),
 );
 
-const { setTours } = require('./controller/tours');
-
 const port = process.env.PORT || 1000;
 
 const app = require('./app');
+const Tour = require('./models/tour');
 
 app.listen(port, async (_) => {
   try {
@@ -28,9 +29,9 @@ app.listen(port, async (_) => {
     if (mongo) console.log('mongoDB 连接成功 ✌️');
 
     // TODO read file simple tours list
-    setTours(
-      JSON.parse(await fsPromises.readFile(`${__dirname}/dev-data/data/tours-simple.json`, { encoding: 'utf8' })),
-    );
+    // setTours(
+    //   JSON.parse(await fsPromises.readFile(`${__dirname}/dev-data/data/tours-simple.json`, { encoding: 'utf8' })),
+    // );
 
     console.log(`app is running on: http://localhost:${port}`);
   } catch (e) {

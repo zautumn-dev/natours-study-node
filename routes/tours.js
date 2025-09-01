@@ -3,7 +3,8 @@ const handler = require('../controller/tours');
 
 const toursRouter = express.Router();
 
-toursRouter.param('id', handler.checkTourId);
+// 根据id 处理数据类似 中间件
+// toursRouter.param('id', handler.checkTourId);
 
 toursRouter.route('/').get(handler.getAllTours).post(handler.checkCreateTour, handler.createTour);
 toursRouter.route('/:id').get(handler.getTour).patch(handler.updateTour).delete(handler.delTour);
