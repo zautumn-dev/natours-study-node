@@ -34,22 +34,22 @@ async function connectDatabase() {
 async function importTours() {
   return new Promise((resolve) => {
     try {
-      // const chunks = [];
-      let toursStr = '';
+      const chunks = [];
+      // let toursStr = '';
 
-      // 加载json文件
-      const readable = createReadStream(`${__dirname}/tours-simple-template.json`, { encoding: 'utf8' });
+      // 加载json文件  字符串方式 { encoding: 'utf8' }
+      // buffer方式
+      const readable = createReadStream(`${__dirname}/tours-simple-template.json`);
 
       readable.on('data', (chunk) => {
-        // chunks.push(chunk);
-        toursStr += chunk;
+        chunks.push(chunk);
+        // toursStr += chunk;
       });
       readable.on('end', async () => {
         // 读取为二进制时使用connect 拼接成完整Buffer
-        // console.log(JSON.parse(Buffer.concat(chunks).toString('utf-8')));
+        await Tour.create(JSON.parse(Buffer.concat(chunks).toString('utf-8')));
         // 字符串直接
-
-        await Tour.create(JSON.parse(toursStr));
+        // await Tour.create(JSON.parse(toursStr));
         resolve();
         console.log('数据新增成功 ✌️');
       });
