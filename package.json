@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "start:dev": "nodemon server.js",
-    "start:prod": "NODE_ENV=production nodemon server.js"
+    "start:prod": "NODE_ENV=production nodemon server.js",
+    "test:importTours": "node ./test/import-tours-data.js import",
+    "test:removeTours": "node ./test/import-tours-data.js"
   },
   "author": "lupinus",
   "license": "ISC",

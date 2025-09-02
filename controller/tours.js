@@ -34,34 +34,52 @@ const checkCreateTour = (req, res, next) => {
   if (!name || !price) {
     return res.status(400).json({
       status: 400,
+
       message: 'Please enter a valid name and price!',
     });
   }
   next();
 };
 
-const getAllTours = (req, res) => {
-  res.json({
-    status: 200,
-    requestTime: req.requestTime,
-    data: {
-      // len: tourSimples.length,
-      // list: tourSimples,
-    },
-  });
-};
-const getTour = (req, res) => {
+const getAllTours = async (req, res) => {
   try {
-    const id = req.params.id * 1;
+    const tours = await Tour.find();
 
-    // const tour = tourSimples.find((tour) => id === tour.id);
+    res.json({
+      status: 200,
+      requestTime: req.requestTime,
+      data: {
+        len: tours.length,
+        list: tours,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 404,
+      message: err.message,
+    });
+  }
+};
+const getTour = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // const tour = await Tour.findById(id);
+
+    // findOne
+    const tour = await Tour.find({ _id: id });
 
     res.json({
       status: 200,
       message: 'success',
-      // data: tour,
+      data: tour,
     });
-  } catch (e) {}
+  } catch (e) {
+    res.status(404).json({
+      status: 404,
+      message: e.message,
+    });
+  }
 };
 const createTour = async (req, res) => {
   try {
@@ -83,47 +101,48 @@ const createTour = async (req, res) => {
 };
 const updateTour = async (req, res) => {
   try {
-    const id = req.params.id * 1;
+    const { id } = req.params;
 
-    // const tourIndex = tourSimples.findIndex((tour) => id === tour.id);
-    //
-    // const tour = Reflect.get(tourSimples, tourIndex);
-    //
-    // Reflect.set(tourSimples, tourIndex, Object.assign(tour, req.body));
+    const tour = await Tour.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
-    // 写入文件
-    // await fsPromises.writeFile(`${__dirname}/../dev-data/data/tours-simple.json`, JSON.stringify(tourSimples), {
-    //   encoding: 'utf8',
-    // });
-    //
-    // res.json({
-    //   status: 200,
-    //   message: 'success',
-    //   data: tour,
-    // });
-  } catch (e) {}
+    res.json({
+      status: 200,
+      message: 'success',
+      data: tour,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 400,
+      message: err.message,
+    });
+  }
 };
 const delTour = async (req, res) => {
   try {
-    const id = req.params.id * 1;
+    const { id } = req.params;
 
-    // const tourIndex = tourSimples.findIndex((tour) => id === tour.id);
-    //
-    // const tour = Reflect.get(tourSimples, tourIndex);
-    //
-    // tourSimples.splice(tourIndex, 1);
-    //
-    // // 写入文件
-    // await fsPromises.writeFile(`${__dirname}/../dev-data/data/tours-simple.json`, JSON.stringify(tourSimples), {
-    //   encoding: 'utf8',
-    // });
-    //
-    // res.status(204).json({
-    //   status: 204,
-    //   message: 'success',
-    //   data: tour,
-    // });
-  } catch (e) {}
+    const tour = await Tour.findByIdAndDelete(id);
+
+    if (!tour)
+      return res.status(404).json({
+        status: 404,
+        message: 'No tour found',
+      });
+
+    res.status(204).json({
+      status: 204,
+      message: 'success',
+      data: null,
+    });
+  } catch (e) {
+    res.status(400).json({
+      status: 400,
+      message: e.message,
+    });
+  }
 };
 
 module.exports = {
