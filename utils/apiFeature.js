@@ -1,6 +1,3 @@
-const Tour = require('../models/tour');
-const { all } = require('express/lib/application');
-
 function filterQueryFields(allowFields = [], query) {
   const fieldsStr = JSON.stringify(
     allowFields.reduce((obj, field) => {
