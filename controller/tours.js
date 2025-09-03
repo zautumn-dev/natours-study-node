@@ -1,5 +1,7 @@
 const fsPromises = require('node:fs/promises');
+const { query } = require('express');
 const Tour = require('../models/tour');
+const APIFeature = require('../utils/apiFeature');
 
 // const tourSimples = []
 
@@ -29,24 +31,6 @@ const Tour = require('../models/tour');
 //   }
 // };
 
-const allowFields = Object.keys(Tour.schema.obj);
-
-function filterQueryFields(query) {
-  const fieldsStr = JSON.stringify(
-    allowFields.reduce((obj, field) => {
-      const val = Reflect.get(query, field);
-      if (val) {
-        Reflect.set(obj, field, val);
-        Reflect.deleteProperty(query, field);
-      }
-
-      return obj;
-    }, {}),
-  );
-
-  return JSON.parse(fieldsStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`));
-}
-
 const checkCreateTour = (req, res, next) => {
   const { name, price } = req.body;
   if (!name || !price) {
@@ -63,30 +47,9 @@ const getAllTours = async (req, res) => {
   try {
     console.log(req.query);
 
-    const queryFields = filterQueryFields(req.query);
-    const queryOperate = req.query;
+    const tourFeature = new APIFeature(Tour.find(), req.query).filter().sort().select().pagination();
+    const tours = await tourFeature.query;
 
-    let query = Tour.find(queryFields);
-
-    // sorting
-    query = query.sort(queryOperate.sort ? queryOperate.sort.split(',').join(' ') : '-createdAt');
-
-    // 过滤只需要的 fields
-    query = query.select(queryOperate.fields ? `${queryOperate.fields.split(',').join(' ')} _id` : '-__v');
-
-    // 分页
-    const pageSize = queryOperate.pageSize ?? 5;
-    const skip = ((queryOperate.page ?? 1) - 1) * pageSize;
-    query = query.skip(skip).limit(pageSize);
-
-    if (queryOperate.page) {
-      const toursLen = await Tour.countDocuments();
-      if (skip >= toursLen) throw new Error('This page does not exist');
-    }
-
-    const tours = await query;
-
-    // const tours = await Tour.find().where('')
     res.json({
       status: 200,
       requestTime: req.requestTime,
