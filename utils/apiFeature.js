@@ -20,7 +20,6 @@ class APIFeature {
   }
 
   filter() {
-    console.log(this.query);
     // 按照Field 的值查询
     const queryFields = filterQueryFields(Object.keys(this.query.schema.obj), this.queryOperate);
     this.query = this.query.find(queryFields);

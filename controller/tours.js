@@ -158,6 +158,59 @@ function aliasTopTour(req, res, next) {
   next();
 }
 
+async function getTourState(req, res) {
+  try {
+    const state = await Tour.aggregate([
+      {
+        // 查找 ratingAverage大于4的
+        $match: { ratingAverage: { $gte: 4.5 } },
+      },
+      {
+        $group: {
+          // id设置null不分组 根据设置的值分组 如果设置的字段找不到就不分组
+          _id: { $toUpper: '$difficulty' },
+          tourCount: { $sum: 1 },
+          ratingCount: { $sum: '$ratingQuantity' },
+          avgRating: { $avg: '$ratingAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        $sort: {
+          avgPrice: -1,
+        },
+      },
+      // 再次筛选_id不等于EASY的
+      // {
+      //   $match: { _id: { $ne: 'EASY' } },
+      // },
+    ]);
+
+    res.json({
+      status: 200,
+      message: 'success',
+      data: state,
+    });
+  } catch (e) {
+    res.status(404).json({
+      status: 404,
+      message: e.message,
+    });
+  }
+}
+
+async function getMonthlyPlan(req, res) {
+  try {
+  } catch (e) {
+    res.status(404).json({
+      status: 404,
+      message: e.message,
+    });
+  }
+}
+
 module.exports = {
   getAllTours,
   getTour,
@@ -166,4 +219,6 @@ module.exports = {
   delTour,
   checkCreateTour,
   aliasTopTour,
+  getTourState,
+  getMonthlyPlan,
 };
