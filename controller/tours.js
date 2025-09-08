@@ -203,6 +203,62 @@ async function getTourState(req, res) {
 
 async function getMonthlyPlan(req, res) {
   try {
+    const { year } = req.params;
+
+    const tours = await Tour.aggregate([
+      {
+        // 将按照设置的字段 拆分数组为多个文档
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            // 筛选 2021年1-1 到 2021年12-31
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          // 按照 时间分组
+          _id: { $month: '$startDates' },
+          //   计数
+          tourCount: { $sum: 1 },
+          // push 返回 名称的 数组
+          tours: { $push: '$name' },
+        },
+      },
+      {
+        $addFields: {
+          // 添加属性
+          month: '$_id',
+        },
+      },
+      {
+        $project: {
+          // 隐藏_id
+          _id: 0,
+        },
+      },
+      {
+        $sort: {
+          tourCount: -1,
+        },
+      },
+      {
+        //  限制返回条数
+        $limit: 12,
+      },
+    ]);
+    res.json({
+      status: 200,
+      message: 'success',
+      data: {
+        len: tours.length,
+        list: tours,
+      },
+    });
   } catch (e) {
     res.status(404).json({
       status: 404,
