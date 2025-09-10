@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 // 创建集合
 const TourShema = mongoose.Schema(
@@ -7,9 +8,13 @@ const TourShema = mongoose.Schema(
     name: {
       type: String,
       required: [true, 'Tour name is required'],
-      // 唯一性校验
+      // 唯一性校验 但不是校验器
       unique: true,
       trim: true,
+      //   maxlength,  minlength 最大长度最小长度校验
+
+      // 引入外部校验库
+      // validate: [validator.isAlpha, 'Tour name must only contain characters'],
     },
     secretField: {
       type: String,
@@ -27,11 +32,17 @@ const TourShema = mongoose.Schema(
     difficulty: {
       type: String,
       required: [true, 'Tour difficulty is required'],
+      enum: {
+        // enum 枚举值校验 easy medium difficult
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficulty is either: easy, medium, difficult',
+      },
     },
 
     ratingAverage: {
       type: Number,
       default: 3.9,
+      //   max , min 最大值最小值校验 适用日期
     },
     ratingQuantity: {
       type: Number,
@@ -39,7 +50,17 @@ const TourShema = mongoose.Schema(
     },
     rating: { type: Number, default: 4.1 },
     price: { type: Number, required: [true, 'Tour price is required'] },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      // 自定义校验 折扣价格不可大于原价
+      validate: {
+        validator: function (val) {
+          return val < this.price;
+        },
+        // ({VALUE}) mongoose 会自动把当前字段的值传入
+        message: 'Discount price ({VALUE}) should be less than the regular price.',
+      },
+    },
     summary: {
       type: String,
       trim: true,
@@ -112,6 +133,11 @@ TourShema.post('create', (doc, next) => {
   next();
 });
 
+TourShema.pre('aggregate', function (next) {
+  // 给 聚合查询的 管道 添加 排除 secretTour 为true的条件
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  next();
+});
 //  虚拟属性 通过数据库中真实字段 计算出的属性， 通过getter获取 不能通过虚拟属性进行查询数据库 find xxx
 TourShema.virtual('durationWeeks').get(function () {
   return this.duration / 7;

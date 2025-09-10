@@ -110,7 +110,7 @@ const updateTour = async (req, res) => {
 
     const tour = await Tour.findByIdAndUpdate(id, req.body, {
       new: true,
-      runValidators: true,
+      runValidators: true, // 更新时使用校验
     });
 
     res.json({
