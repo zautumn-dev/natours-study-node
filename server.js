@@ -13,18 +13,20 @@ const port = process.env.PORT || 1000;
 
 const app = require('./app');
 
-app.listen(port, async (_) => {
+const connectWithRetry = async () => {
   try {
-    // 连接数据库
     const mongo = await mongoose.connect(process.env.DATABASE_ADDRESS, {
-      // 连接数据库设置从默认admin数据库中认证
       authSource: 'admin',
     });
 
-    if (mongo) console.log('mongoDB 连接成功 ✌️');
-
-    console.log(`app is running on: http://localhost:${port}`);
+    if (mongo) {
+      console.log('mongoDB 连接成功 ✌️');
+      console.log(`app is running on: http://localhost:${port}`);
+    }
   } catch (e) {
-    console.log(e.message);
+    console.log('数据库连接失败，稍后重试...', e.message);
+    setTimeout(connectWithRetry, 10);
   }
-});
+};
+
+app.listen(port, connectWithRetry);
