@@ -1,7 +1,6 @@
-const fsPromises = require('node:fs/promises');
-const { query } = require('express');
 const Tour = require('../models/tour');
 const APIFeature = require('../utils/apiFeature');
+const catchAsync = require('../utils/catchAsync');
 
 // const tourSimples = []
 
@@ -43,112 +42,79 @@ const checkCreateTour = (req, res, next) => {
   next();
 };
 
-const getAllTours = async (req, res) => {
-  try {
-    console.log(req.query);
+const getAllTours = catchAsync(async (req, res) => {
+  const tourFeature = new APIFeature(Tour.find(), req.query).filter().sort().select().pagination();
+  const tours = await tourFeature.query;
 
-    const tourFeature = new APIFeature(Tour.find(), req.query).filter().sort().select().pagination();
-    const tours = await tourFeature.query;
+  res.json({
+    status: 200,
+    requestTime: req.requestTime,
+    data: {
+      len: tours.length,
+      list: tours,
+    },
+  });
+});
 
-    res.json({
-      status: 200,
-      requestTime: req.requestTime,
-      data: {
-        len: tours.length,
-        list: tours,
-      },
-    });
-  } catch (err) {
-    res.status(404).json({
+const getTour = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  // const tour = await Tour.findById(id);
+
+  // findOne
+  const tour = await Tour.find({ _id: id });
+
+  res.json({
+    status: 200,
+    message: 'success',
+    data: tour,
+  });
+});
+
+const createTour = catchAsync(async (req, res) => {
+  const newTour = await Tour.create(req.body);
+
+  res.status(201).json({
+    status: 201,
+    message: 'success',
+    data: {
+      tour: newTour,
+    },
+  });
+});
+
+const updateTour = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const tour = await Tour.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true, // 更新时使用校验
+  });
+
+  res.json({
+    status: 200,
+    message: 'success',
+    data: tour,
+  });
+});
+
+const delTour = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const tour = await Tour.findByIdAndDelete(id);
+
+  if (!tour)
+    return res.status(404).json({
       status: 404,
-      message: err.message,
-    });
-  }
-};
-const getTour = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // const tour = await Tour.findById(id);
-
-    // findOne
-    const tour = await Tour.find({ _id: id });
-
-    res.json({
-      status: 200,
-      message: 'success',
-      data: tour,
-    });
-  } catch (e) {
-    res.status(404).json({
-      status: 404,
-      message: e.message,
-    });
-  }
-};
-const createTour = async (req, res) => {
-  try {
-    const newTour = await Tour.create(req.body);
-
-    res.status(201).json({
-      status: 201,
-      message: 'success',
-      data: {
-        tour: newTour,
-      },
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 400,
-      message: err.message,
-    });
-  }
-};
-const updateTour = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const tour = await Tour.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true, // 更新时使用校验
+      message: 'No tour found',
     });
 
-    res.json({
-      status: 200,
-      message: 'success',
-      data: tour,
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 400,
-      message: err.message,
-    });
-  }
-};
-const delTour = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const tour = await Tour.findByIdAndDelete(id);
-
-    if (!tour)
-      return res.status(404).json({
-        status: 404,
-        message: 'No tour found',
-      });
-
-    res.status(204).json({
-      status: 204,
-      message: 'success',
-      data: null,
-    });
-  } catch (e) {
-    res.status(400).json({
-      status: 400,
-      message: e.message,
-    });
-  }
-};
+  res.status(204).json({
+    status: 204,
+    message: 'success',
+    data: null,
+  });
+});
 
 function aliasTopTour(req, res, next) {
   // Reflect.set(req.query, 'pageSize', 5);
