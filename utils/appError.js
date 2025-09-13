@@ -10,7 +10,7 @@ class AppError extends Error {
     this.statusCode = statusCode || 500;
 
     // 当报错的error 内部没有这个属性时，表示是内置的Error
-    this.isCustomize = true;
+    this.isOperational = true;
 
     // error.stack 会显示错误堆栈信息
     Error.captureStackTrace(this, this.constructor);

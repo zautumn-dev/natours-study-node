@@ -12,6 +12,7 @@ const TourShema = mongoose.Schema(
       unique: true,
       trim: true,
       //   maxlength,  minlength 最大长度最小长度校验
+      minlength: [6, 'Tour name must be longer than 10 characters'],
 
       // 引入外部校验库
       // validate: [validator.isAlpha, 'Tour name must only contain characters'],
@@ -43,6 +44,7 @@ const TourShema = mongoose.Schema(
       type: Number,
       default: 3.9,
       //   max , min 最大值最小值校验 适用日期
+      max: 5,
     },
     ratingQuantity: {
       type: Number,

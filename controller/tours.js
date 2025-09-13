@@ -1,6 +1,7 @@
 const Tour = require('../models/tour');
 const APIFeature = require('../utils/apiFeature');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 // const tourSimples = []
 
@@ -56,13 +57,16 @@ const getAllTours = catchAsync(async (req, res) => {
   });
 });
 
-const getTour = catchAsync(async (req, res) => {
+const getTour = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
   // const tour = await Tour.findById(id);
 
   // findOne
-  const tour = await Tour.find({ _id: id });
+  const tourList = await Tour.find({ _id: id });
+  if (!tourList.length) return next(new AppError(`no tour found with that ${id}`, 404));
+
+  const tour = Reflect.get(tourList, 0);
 
   res.json({
     status: 200,
@@ -98,16 +102,12 @@ const updateTour = catchAsync(async (req, res) => {
   });
 });
 
-const delTour = catchAsync(async (req, res) => {
+const delTour = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
   const tour = await Tour.findByIdAndDelete(id);
 
-  if (!tour)
-    return res.status(404).json({
-      status: 404,
-      message: 'No tour found',
-    });
+  if (!tour) return next(new AppError(`no tour found with that ${id}`, 404));
 
   res.status(204).json({
     status: 204,
