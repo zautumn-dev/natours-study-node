@@ -81,9 +81,6 @@ const createTour = catchAsync(async (req, res) => {
   res.status(201).json({
     status: 201,
     message: 'success',
-    data: {
-      tour: newTour,
-    },
   });
 });
 

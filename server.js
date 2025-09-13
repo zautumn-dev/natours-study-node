@@ -46,5 +46,3 @@ process.on('uncaughtException', (err) => {
   console.log('uncaughtException event occurred. stopping the server...');
   server.close(() => process.exit(1));
 });
-
-console.log(x);
