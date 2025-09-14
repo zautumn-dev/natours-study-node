@@ -40,7 +40,7 @@ app.all('*', (req, res, next) => {
   next(e);
 });
 
-// 错误处理
+// 错误处理 兜底错误处理中间件
 app.use(errorhandler);
 
 module.exports = app;

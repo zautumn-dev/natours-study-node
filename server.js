@@ -2,10 +2,13 @@ const dotenv = require('dotenv');
 const dotenvExpand = require('dotenv-expand');
 const mongoose = require('mongoose');
 
+// 根据不同环境读取相应env文件
+const ENV_FILE_NAME = `.config.env.${process.env.NODE_ENV === 'production' ? 'production' : 'development'}`;
+
 // 识别.env中${}内容
 dotenvExpand.expand(
   dotenv.config({
-    path: ['.env', 'config.env'],
+    path: ['.env', ENV_FILE_NAME],
   }),
 );
 
