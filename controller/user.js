@@ -16,7 +16,7 @@ module.exports = {
     // 验证令牌是否存在 Bearer -》 持票人
     const { authorization } = req.headers;
     let token = null;
-    if (authorization && authorization.startsWith('bearer')) {
+    if (authorization && authorization.startsWith('Bearer')) {
       token = Reflect.get(authorization.split(' '), 1);
     }
 
@@ -39,6 +39,38 @@ module.exports = {
     next();
   }),
 
+  //  验证用户权限
+  restrictTo: function (...roles) {
+    return (req, res, next) => {
+      console.log(req.user);
+      // roles  = ['admin', 'lead-guide']
+      if (!roles.includes(req.user.role))
+        return next(new AppError('You do not have permission to perform this action', 403));
+
+      next();
+    };
+  },
+
+  // 忘记密码
+  forgotPassword: catchAsync(async (req, res, next) => {
+    let user = await User.findOne({ email: req.body.email });
+
+    if (!user) return next(new AppError('There is no user with email address.', 404));
+
+    const resetToken = user.createPasswordResetToken();
+    user = await user.save({ validateBeforeSave: false });
+    console.log(user);
+
+    res.json({
+      status: 200,
+      message: 'success',
+    });
+  }),
+
+  //  重置密码
+  resetPassword: catchAsync(async (req, res, next) => {}),
+
+  //   注册
   signup: catchAsync(async (req, res, next) => {
     const { body } = req;
     const newUser = await User.create({
@@ -47,6 +79,7 @@ module.exports = {
       password: body.password,
       passwordConfirm: body.passwordConfirm,
       passwordChangeAt: body.passwordChangeAt,
+      role: body.role,
     });
 
     // 生成token
@@ -60,7 +93,7 @@ module.exports = {
     });
   }),
 
-  // login
+  //    登录
   login: catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
     // 验证邮箱密码是否输入

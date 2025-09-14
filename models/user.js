@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const { Schema, model } = require('mongoose');
 const validator = require('validator');
 const bcryptjs = require('bcryptjs');
@@ -17,6 +18,11 @@ const userSchema = new Schema({
     unique: true,
   },
   photo: String,
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user',
+  },
   password: {
     type: String,
     required: [true, 'User password is required'],
@@ -39,6 +45,9 @@ const userSchema = new Schema({
     },
   },
   passwordChangeAt: Date,
+
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 });
 
 userSchema.pre('save', async function (next) {
@@ -67,6 +76,17 @@ userSchema.methods.checkChangedPassword = function (jwtTimestamp) {
 
   // 发行的jwt令牌时间戳小于修改密码的时间戳表示 令牌过期 返回true
   return jwtTimestamp < changedTimestamp;
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  // 数据库存储校验的hash值 token
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+  console.log(this.passwordResetToken);
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  return resetToken;
 };
 
 const User = model('user', userSchema);
