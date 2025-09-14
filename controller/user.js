@@ -1,8 +1,10 @@
 const utils = require('node:util');
 const jwt = require('jsonwebtoken');
+
 const catchAsync = require('../utils/catchAsync');
 const User = require('../models/user');
 const AppError = require('../utils/appError');
+const sendMail = require('../utils/sendMail');
 
 function setJWTToken(id) {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -59,12 +61,28 @@ module.exports = {
 
     const resetToken = user.createPasswordResetToken();
     user = await user.save({ validateBeforeSave: false });
-    console.log(user);
 
-    res.json({
-      status: 200,
-      message: 'success',
-    });
+    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
+
+    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetUrl}\n If you did not forget your password, please ignore this email!`;
+
+    try {
+      await sendMail({
+        email: user.email,
+        subject: 'Your password reset token (valid for 10 min)',
+        message,
+        // text: `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${process.env.BASE_URL}/api/v1/users/resetPassword/${resetToken}`,
+      });
+
+      res.json({
+        status: 200,
+        message: 'success',
+      });
+    } catch (e) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+    }
   }),
 
   //  重置密码
@@ -103,15 +121,16 @@ module.exports = {
     const user = await User.findOne({ email }).select('+password -__v');
     // 无法恢复已经加密的密码 验证时把登录的密码加密与数据库中的密码进行比较 方法封装在UserSchema实例上
     if (!user || !(await user.checkPassword(password))) return next(new AppError('Invalid email or password', 401));
-
+    const jwtToken = setJWTToken(user._id);
     res.json({
       status: 200,
       message: 'success',
+      token: jwtToken,
       data: {
         id: user._id,
         name: user.name,
         email: user.email,
-        token: setJWTToken(user._id),
+        token: jwtToken,
       },
     });
   }),
