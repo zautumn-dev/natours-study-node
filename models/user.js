@@ -22,12 +22,14 @@ const userSchema = new Schema({
     required: [true, 'User password is required'],
     maxlength: 16,
     minlength: 3,
+    select: false, // 隐藏密码字段 在查询到数据的时候
   },
   passwordConfirm: {
     type: String,
     maxlength: 16,
     minlength: 3,
     required: [true, 'User passwordConfirm is required'],
+    select: false,
     validate: {
       // 校验只在创建跟保存时生效 。更新并不会触发
       validator: function (val) {
@@ -51,6 +53,11 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+userSchema.methods.checkPassword = async function (userPassword) {
+  // 可以通过this 获取到实例
+  return await bcryptjs.compare(userPassword, this.password);
+};
 
 const User = model('user', userSchema);
 
