@@ -38,6 +38,7 @@ const userSchema = new Schema({
       message: 'Password and passwordConfirm must be the same',
     },
   },
+  passwordChangeAt: Date,
 });
 
 userSchema.pre('save', async function (next) {
@@ -57,6 +58,15 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.checkPassword = async function (userPassword) {
   // 可以通过this 获取到实例
   return await bcryptjs.compare(userPassword, this.password);
+};
+
+userSchema.methods.checkChangedPassword = function (jwtTimestamp) {
+  if (!this.passwordChangeAt) return false;
+
+  const changedTimestamp = parseInt(this.passwordChangeAt.getTime() / 1000, 10);
+
+  // 发行的jwt令牌时间戳小于修改密码的时间戳表示 令牌过期 返回true
+  return jwtTimestamp < changedTimestamp;
 };
 
 const User = model('user', userSchema);

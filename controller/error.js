@@ -15,6 +15,14 @@ function handleValidationErrorDB(err) {
   return new AppError(`invalid input data. ${values.join(', ')}`, 400);
 }
 
+function handleJsonWebTokenError(err) {
+  return new AppError(`Invalid token. Please log in again!`, 401);
+}
+
+function handleJsonWebTokenExpiredError(err) {
+  return new AppError(`Token expired. Please log in again!`, 401);
+}
+
 function sendErrorDev(err, req, res, next) {
   res.status(err.statusCode).json({
     status: err.status,
@@ -58,6 +66,8 @@ const errorHandler = (err, req, res, next) => {
       if (err.code === 11000) operationalError = handleDuplicateFieldsDB(err);
       if (err.name === 'ValidationError') operationalError = handleValidationErrorDB(err);
 
+      if (err.name === 'JsonWebTokenError') operationalError = handleJsonWebTokenError(err);
+      if (err.name === 'TokenExpiredError') operationalError = handleJsonWebTokenExpiredError(err);
       sendErrorProd(operationalError ?? err, req, res, next);
       break;
   }
