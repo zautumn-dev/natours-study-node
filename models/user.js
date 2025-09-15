@@ -2,6 +2,7 @@ const crypto = require('node:crypto');
 const { Schema, model } = require('mongoose');
 const validator = require('validator');
 const bcryptjs = require('bcryptjs');
+const fs = require('node:fs');
 
 const userSchema = new Schema({
   name: {
@@ -50,6 +51,13 @@ const userSchema = new Schema({
   passwordResetExpires: Date,
 });
 
+userSchema.pre('save', function (next) {
+  if (this.isNew || !this.isModified('password')) return next();
+
+  this.passwordChangeAt = Date.now();
+  next();
+});
+
 userSchema.pre('save', async function (next) {
   // 判断 是否修改过密码 没修改密码直接跳过密码加密
   if (!this.isModified('password')) return next();
@@ -85,6 +93,7 @@ userSchema.methods.createPasswordResetToken = function () {
   this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
   console.log(this.passwordResetToken);
+
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };

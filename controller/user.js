@@ -1,4 +1,6 @@
 const utils = require('node:util');
+const crypto = require('node:crypto');
+
 const jwt = require('jsonwebtoken');
 
 const catchAsync = require('../utils/catchAsync');
@@ -64,15 +66,16 @@ module.exports = {
 
     const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
 
-    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetUrl}\n If you did not forget your password, please ignore this email!`;
+    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetUrl}\n If you did not forget your password, please ignore this email! \n 你的刷新token是： ${resetToken}`;
 
     try {
-      await sendMail({
+      console.log(message);
+      /*      await sendMail({
         email: user.email,
         subject: 'Your password reset token (valid for 10 min)',
         message,
         // text: `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${process.env.BASE_URL}/api/v1/users/resetPassword/${resetToken}`,
-      });
+      });*/
 
       res.json({
         status: 200,
@@ -86,7 +89,34 @@ module.exports = {
   }),
 
   //  重置密码
-  resetPassword: catchAsync(async (req, res, next) => {}),
+  resetPassword: catchAsync(async (req, res, next) => {
+    console.log(req.params.resetToken);
+    // 加密获取的刷新令牌
+    const hash = crypto.createHash('sha256');
+    const restToken = hash.update(req.params.resetToken).digest('hex');
+    console.log(restToken);
+
+    // 检验数据库中是否存在该用户 同时校验token是否过期
+    const user = await User.findOne({ passwordResetToken: restToken, passwordResetExpires: { $gt: Date.now() } });
+
+    if (!user) return next(new AppError('token 失效或超时了', 400));
+
+    // 更新密码
+    const { password, passwordConfirm } = req.body;
+
+    user.password = password;
+    user.passwordConfirm = passwordConfirm;
+
+    user.passwordResetExpires = undefined;
+    user.passwordResetToken = undefined;
+
+    await user.save();
+
+    res.json({
+      status: 200,
+      message: 'reset password success! 请重新登录',
+    });
+  }),
 
   //   注册
   signup: catchAsync(async (req, res, next) => {
@@ -96,7 +126,7 @@ module.exports = {
       email: body.email,
       password: body.password,
       passwordConfirm: body.passwordConfirm,
-      passwordChangeAt: body.passwordChangeAt,
+      // passwordChangeAt: body.passwordChangeAt,
       role: body.role,
     });
 
