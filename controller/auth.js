@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 const jwt = require('jsonwebtoken');
 
 const catchAsync = require('../utils/catchAsync');
-const User = require('../models/user');
+const Auth = require('../models/user');
 const AppError = require('../utils/appError');
 const { setPasswdEncryption } = require('../utils/setPasswdEncryption');
 
@@ -30,7 +30,7 @@ module.exports = {
     const decoded = await utils.promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
     // 验证用户是否存在
-    const user = await User.findById(decoded.id).select('+password -__v');
+    const user = await Auth.findById(decoded.id).select('+password -__v');
 
     if (!user) return next(new AppError(`The user belonging to this token does not exist.`, 401));
 
@@ -58,7 +58,7 @@ module.exports = {
   //   注册
   signup: catchAsync(async (req, res, next) => {
     const { body } = req;
-    const newUser = await User.create({
+    const newUser = await Auth.create({
       name: body.name,
       email: body.email,
       password: body.password,
@@ -85,7 +85,7 @@ module.exports = {
     if (!email || !password) return next(new AppError('please provide email and password', 400));
 
     // 查询
-    const user = await User.findOne({ email }).select('+password -__v');
+    const user = await Auth.findOne({ email }).select('+password -__v');
     // 无法恢复已经加密的密码 验证时把登录的密码加密与数据库中的密码进行比较 方法封装在UserSchema实例上
     if (!user || !(await user.checkPassword(password))) return next(new AppError('Invalid email or password', 401));
     const jwtToken = setJWTToken(user._id);
@@ -135,7 +135,7 @@ module.exports = {
 
   // 忘记密码
   forgotPassword: catchAsync(async (req, res, next) => {
-    let user = await User.findOne({ email: req.body.email });
+    let user = await Auth.findOne({ email: req.body.email });
 
     if (!user) return next(new AppError('There is no user with email address.', 404));
 
@@ -175,7 +175,7 @@ module.exports = {
     console.log(restToken);
 
     // 检验数据库中是否存在该用户 同时校验token是否过期 查找 数据库中 passwordResetExpires  字段大于当前时间
-    const user = await User.findOne({ passwordResetToken: restToken, passwordResetExpires: { $gt: Date.now() } });
+    const user = await Auth.findOne({ passwordResetToken: restToken, passwordResetExpires: { $gt: Date.now() } });
 
     if (!user) return next(new AppError('token 失效或超时了', 400));
 

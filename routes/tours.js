@@ -1,6 +1,6 @@
 const express = require('express');
 const handler = require('../controller/tours');
-const { protect, restrictTo } = require('../controller/user');
+const { protect, restrictTo } = require('../controller/auth');
 
 const toursRouter = express.Router();
 
