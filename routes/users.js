@@ -9,7 +9,8 @@ usersRouter.post('/signup', authHandler.signup).post('/login', authHandler.login
 
 usersRouter
   .post('/forgot-password', authHandler.forgotPassword)
-  .patch('/reset-password/:resetToken', authHandler.resetPassword);
+  .patch('/reset-password/:resetToken', authHandler.resetPassword)
+  .patch('/update-password', authHandler.protect, authHandler.updatePassword);
 
 usersRouter.route('/').get(getAllUsers).post(createUser);
 usersRouter.route('/:id').get(getUser).patch(updateUser).delete(delUser);

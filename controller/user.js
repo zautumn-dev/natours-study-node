@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const catchAsync = require('../utils/catchAsync');
 const User = require('../models/user');
 const AppError = require('../utils/appError');
-const sendMail = require('../utils/sendMail');
+const { setPasswdEncryption } = require('../utils/setPasswdEncryption');
 
 function setJWTToken(id) {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -26,11 +26,11 @@ module.exports = {
 
     if (!token) return next(new AppError(`You are not logged in! Please log in to get access.`, 401));
 
-    // 验证token 状态
+    // 验证token 状态 解码 jwt token 还原用户id
     const decoded = await utils.promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
     // 验证用户是否存在
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.id).select('+password -__v');
 
     if (!user) return next(new AppError(`The user belonging to this token does not exist.`, 401));
 
@@ -54,69 +54,6 @@ module.exports = {
       next();
     };
   },
-
-  // 忘记密码
-  forgotPassword: catchAsync(async (req, res, next) => {
-    let user = await User.findOne({ email: req.body.email });
-
-    if (!user) return next(new AppError('There is no user with email address.', 404));
-
-    const resetToken = user.createPasswordResetToken();
-    user = await user.save({ validateBeforeSave: false });
-
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
-
-    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetUrl}\n If you did not forget your password, please ignore this email! \n 你的刷新token是： ${resetToken}`;
-
-    try {
-      console.log(message);
-      /*      await sendMail({
-        email: user.email,
-        subject: 'Your password reset token (valid for 10 min)',
-        message,
-        // text: `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${process.env.BASE_URL}/api/v1/users/resetPassword/${resetToken}`,
-      });*/
-
-      res.json({
-        status: 200,
-        message: 'success',
-      });
-    } catch (e) {
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save({ validateBeforeSave: false });
-    }
-  }),
-
-  //  重置密码
-  resetPassword: catchAsync(async (req, res, next) => {
-    console.log(req.params.resetToken);
-    // 加密获取的刷新令牌
-    const hash = crypto.createHash('sha256');
-    const restToken = hash.update(req.params.resetToken).digest('hex');
-    console.log(restToken);
-
-    // 检验数据库中是否存在该用户 同时校验token是否过期
-    const user = await User.findOne({ passwordResetToken: restToken, passwordResetExpires: { $gt: Date.now() } });
-
-    if (!user) return next(new AppError('token 失效或超时了', 400));
-
-    // 更新密码
-    const { password, passwordConfirm } = req.body;
-
-    user.password = password;
-    user.passwordConfirm = passwordConfirm;
-
-    user.passwordResetExpires = undefined;
-    user.passwordResetToken = undefined;
-
-    await user.save();
-
-    res.json({
-      status: 200,
-      message: 'reset password success! 请重新登录',
-    });
-  }),
 
   //   注册
   signup: catchAsync(async (req, res, next) => {
@@ -162,6 +99,100 @@ module.exports = {
         email: user.email,
         token: jwtToken,
       },
+    });
+  }),
+
+  // 更新密码
+  updatePassword: catchAsync(async (req, res, next) => {
+    //  收集密码是否输入
+    const { currentPassword, newPassword, newPasswordConfirm } = req.body;
+
+    if (!currentPassword || !newPassword || !newPasswordConfirm)
+      return next(new AppError('Please provide currentPassword or newPassword or newPasswordConfirm!', 400));
+
+    const { user } = req;
+
+    // 检查新密码跟确认密码是否一致 多此一举
+    // if (newPassword !== newPasswordConfirm)
+    //   return next(new AppError('New password and newPasswordConfirm must be the same', 400));
+
+    // 判断当前密码是否与之前密码一致
+    if (!(await user.checkPassword(currentPassword))) return next(new AppError('Current password is wrong!', 401));
+
+    // 新密码不能跟旧密码一样
+    if (await user.checkPassword(newPassword)) return next(new AppError('不能使用之前一样的密码！', 401));
+
+    // 修改新密码
+    Reflect.set(user, 'password', newPassword);
+    Reflect.set(user, 'passwordConfirm', newPasswordConfirm);
+    await user.save();
+
+    res.json({
+      status: 200,
+      message: '密码修改成功，请重新登录！',
+    });
+  }),
+
+  // 忘记密码
+  forgotPassword: catchAsync(async (req, res, next) => {
+    let user = await User.findOne({ email: req.body.email });
+
+    if (!user) return next(new AppError('There is no user with email address.', 404));
+
+    const resetToken = user.createPasswordResetToken();
+    user = await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
+
+    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetUrl}\n If you did not forget your password, please ignore this email! \n 你的刷新token是： ${resetToken}`;
+
+    try {
+      console.log(message);
+      /*      await sendMail({
+        email: user.email,
+        subject: 'Your password reset token (valid for 10 min)',
+        message,
+        // text: `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${process.env.BASE_URL}/api/v1/users/resetPassword/${resetToken}`,
+      });*/
+
+      res.json({
+        status: 200,
+        message: 'success',
+      });
+    } catch (e) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+    }
+  }),
+
+  //  重置密码
+  resetPassword: catchAsync(async (req, res, next) => {
+    console.log(req.params.resetToken);
+    // 加密获取的刷新令牌
+    const hash = crypto.createHash('sha256');
+    const restToken = hash.update(req.params.resetToken).digest('hex');
+    console.log(restToken);
+
+    // 检验数据库中是否存在该用户 同时校验token是否过期 查找 数据库中 passwordResetExpires  字段大于当前时间
+    const user = await User.findOne({ passwordResetToken: restToken, passwordResetExpires: { $gt: Date.now() } });
+
+    if (!user) return next(new AppError('token 失效或超时了', 400));
+
+    // 更新密码
+    const { password, passwordConfirm } = req.body;
+
+    user.password = password;
+    user.passwordConfirm = passwordConfirm;
+
+    user.passwordResetExpires = undefined;
+    user.passwordResetToken = undefined;
+
+    await user.save();
+
+    res.json({
+      status: 200,
+      message: 'reset password success! 请重新登录',
     });
   }),
 };

@@ -1,8 +1,10 @@
 const crypto = require('node:crypto');
+
 const { Schema, model } = require('mongoose');
 const validator = require('validator');
 const bcryptjs = require('bcryptjs');
-const fs = require('node:fs');
+
+const { setPasswdEncryption } = require('../utils/setPasswdEncryption');
 
 const userSchema = new Schema({
   name: {
@@ -63,8 +65,10 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
   //  加密密码
-  const salt = await bcryptjs.genSalt(12);
-  const cryptedPassword = await bcryptjs.hash(this.password, salt);
+  // const salt = await bcryptjs.genSalt(12);
+  // const cryptedPassword = await bcryptjs.hash(this.password, salt);
+
+  const cryptedPassword = await setPasswdEncryption(this.password);
   Reflect.set(this, 'password', cryptedPassword);
 
   // passwordConfirm 不做数据库持久化 只是对表单输入的密码进行确认校验
