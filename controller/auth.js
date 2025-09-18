@@ -89,6 +89,20 @@ module.exports = {
     // 无法恢复已经加密的密码 验证时把登录的密码加密与数据库中的密码进行比较 方法封装在UserSchema实例上
     if (!user || !(await user.checkPassword(password))) return next(new AppError('Invalid email or password', 401));
     const jwtToken = setJWTToken(user._id);
+
+    // const cookieOptions = {
+    //   expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+    //   httpOnly: true,
+    // };
+    //
+    // if (process.env.NODE_ENV === 'production') Reflect.set(cookieOptions, 'secure', true); // 标记cookie只能通过https传输
+    //  同时返回cookie
+    res.cookie('jwt', jwtToken, {
+      expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // 标记cookie只能通过https传输
+    });
+
     res.json({
       status: 200,
       message: 'success',
