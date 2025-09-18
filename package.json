@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start:dev": "node --watch server.js",
-    "start:prod": "cross-env NODE_ENV=production node --watch server.js",
+    "start:prod": "node --watch server.js production",
     "test:importTours": "node ./test/import-tours-data.js import",
     "test:removeTours": "node ./test/import-tours-data.js"
   },

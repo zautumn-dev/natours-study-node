@@ -2,8 +2,11 @@ const dotenv = require('dotenv');
 const dotenvExpand = require('dotenv-expand');
 const mongoose = require('mongoose');
 
+// 判断当前运行环境是否是生产
+const NODE_ENV = process.argv[2] || 'development';
+
 // 根据不同环境读取相应env文件
-const ENV_FILE_NAME = `.config.env.${process.env.NODE_ENV === 'production' ? 'production' : 'development'}`;
+const ENV_FILE_NAME = `.config.env.${NODE_ENV === 'production' ? 'production' : 'development'}`;
 
 // 识别.env中${}内容
 dotenvExpand.expand(
