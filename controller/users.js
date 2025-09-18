@@ -22,12 +22,17 @@ function filterUserProfileFields(info, ...allowedFields) {
   }, {});
 }
 
-function getAllUsers(req, res) {
-  res.status(500).json({
-    status: 500,
-    message: 'This route is not yet defined!',
+const getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await User.find();
+  res.json({
+    status: 200,
+    message: 'success',
+    data: {
+      len: users.length,
+      list: users,
+    },
   });
-}
+});
 
 function createUser(req, res) {
   res.status(500).json({
@@ -77,11 +82,30 @@ function delUser(req, res) {
   });
 }
 
+const userController = {
+  delMyProfile: catchAsync(async (req, res, next) => {
+    // 隐藏用户活动状态
+    const { user = {} } = req;
+
+    // 不用保存直接更新
+    // await user.save({ validateBeforeSave: false });
+
+    await User.findByIdAndUpdate(user._id, { active: false });
+
+    res.status(204).json({
+      status: 204,
+      message: 'success',
+      data: null,
+    });
+  }),
+};
+
 module.exports = {
   getAllUsers,
   getUser,
   updateUser,
-  delUser,
   createUser,
+  delUser,
   updateMyProfile,
+  ...userController,
 };

@@ -51,6 +51,12 @@ const userSchema = new Schema({
 
   passwordResetToken: String,
   passwordResetExpires: Date,
+
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 userSchema.pre('save', function (next) {
@@ -73,6 +79,12 @@ userSchema.pre('save', async function (next) {
 
   // passwordConfirm 不做数据库持久化 只是对表单输入的密码进行确认校验
   this.passwordConfirm = undefined;
+  next();
+});
+
+userSchema.pre(/^find/, function (next) {
+  // 所有的查询用户都会添加这个参数  这样就可以在令牌还生效的时候查询不到用户直接返回错误
+  this.find({ active: { $ne: false } });
   next();
 });
 
