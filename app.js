@@ -2,6 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
@@ -21,7 +23,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const limiter = rateLimit({
-  max: 3,
+  max: 100,
   windowMs: 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour!',
 });
@@ -31,7 +33,9 @@ app.use('/api', limiter);
 
 // TODO 中间件
 // json 读取请求体body中的值 static 读取静态文件目录中间件
-app.use(express.json()).use(express.static(`${__dirname}/public`));
+app.use(express.json()).use(mongoSanitize()).use(xss());
+
+app.use(express.static(`${__dirname}/public`));
 
 app.use((req, res, next) => {
   console.log('hello from the middleware 👋');
