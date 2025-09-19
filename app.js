@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
@@ -33,7 +34,15 @@ app.use('/api', limiter);
 
 // TODO 中间件
 // json 读取请求体body中的值 static 读取静态文件目录中间件
-app.use(express.json()).use(mongoSanitize()).use(xss());
+app
+  .use(express.json())
+  .use(mongoSanitize())
+  .use(xss())
+  .use(
+    hpp({
+      whitelist: ['duration', 'price'],
+    }),
+  );
 
 app.use(express.static(`${__dirname}/public`));
 
