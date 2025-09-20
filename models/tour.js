@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const validator = require('validator');
+// const User = require('./user');
 
 // 创建集合
 const TourShema = mongoose.Schema(
@@ -88,6 +89,38 @@ const TourShema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+
+        day: Number,
+      },
+    ],
+
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User', //  关联的模型名称 通过ref 关联到User模型 通过 .-->  populate() 方法进行关联查询
+      },
+    ],
   },
   {
     toJSON: {
@@ -106,6 +139,13 @@ TourShema.pre('save', function (next) {
 
   next();
 });
+
+// 将导游嵌入到旅游的文档中
+// TourShema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.allSettled(guidesPromises);
+//   next();
+// });
 
 // 某个事件执行后执行 post
 // TourShema.post('save', (doc, next) => {

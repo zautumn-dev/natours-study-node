@@ -3,6 +3,8 @@ const dotenvExpand = require('dotenv-expand');
 const mongoose = require('mongoose');
 const { createReadStream } = require('node:fs');
 const { resolve } = require('node:path');
+const path = require('node:path');
+
 const Tour = require('../models/tour');
 
 // 识别.env中${}内容
@@ -39,7 +41,7 @@ async function importTours() {
 
       // 加载json文件  字符串方式 { encoding: 'utf8' }
       // buffer方式
-      const readable = createReadStream(`${__dirname}/tours-simple-template.json`);
+      const readable = createReadStream(path.resolve(__dirname, '..', './dev-data/data/tours.json'));
 
       readable.on('data', (chunk) => {
         chunks.push(chunk);
