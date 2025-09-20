@@ -1,5 +1,6 @@
 const catchAsync = require('../utils/catchAsync');
 const Review = require('../models/review');
+const handlerFactory = require('../utils/handlerFactory');
 
 const reviewController = {
   createReview: catchAsync(async (req, res, next) => {
@@ -31,6 +32,8 @@ const reviewController = {
       },
     });
   }),
+
+  delReview: handlerFactory.delOne(Review),
 };
 
 module.exports = reviewController;

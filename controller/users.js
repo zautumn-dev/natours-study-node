@@ -1,6 +1,7 @@
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const User = require('../models/user');
+const handlerFactory = require('../utils/handlerFactory');
 
 const allowedUpdateFields = ['name', 'email'];
 
@@ -75,13 +76,6 @@ function updateUser(req, res) {
   });
 }
 
-function delUser(req, res) {
-  res.status(500).json({
-    status: 500,
-    message: 'This route is not yet defined!',
-  });
-}
-
 const userController = {
   delMyProfile: catchAsync(async (req, res, next) => {
     // 隐藏用户活动状态
@@ -98,6 +92,7 @@ const userController = {
       data: null,
     });
   }),
+  delUser: handlerFactory.delOne(User),
 };
 
 module.exports = {
@@ -105,7 +100,6 @@ module.exports = {
   getUser,
   updateUser,
   createUser,
-  delUser,
   updateMyProfile,
   ...userController,
 };

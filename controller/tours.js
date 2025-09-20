@@ -2,6 +2,7 @@ const Tour = require('../models/tour');
 const APIFeature = require('../utils/apiFeature');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const handlerFactory = require('../utils/handlerFactory');
 
 // const tourSimples = []
 
@@ -102,19 +103,20 @@ const updateTour = catchAsync(async (req, res) => {
   });
 });
 
-const delTour = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-
-  const tour = await Tour.findByIdAndDelete(id);
-
-  if (!tour) return next(new AppError(`no tour found with that ${id}`, 404));
-
-  res.status(204).json({
-    status: 204,
-    message: 'success',
-    data: null,
-  });
-});
+const delTour = handlerFactory.delOne(Tour);
+// const delTour = catchAsync(async (req, res, next) => {
+//   const { id } = req.params;
+//
+//   const tour = await Tour.findByIdAndDelete(id);
+//
+//   if (!tour) return next(new AppError(`no tour found with that ${id}`, 404));
+//
+//   res.status(204).json({
+//     status: 204,
+//     message: 'success',
+//     data: null,
+//   });
+// });
 
 function aliasTopTour(req, res, next) {
   // Reflect.set(req.query, 'pageSize', 5);
