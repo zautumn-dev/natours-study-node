@@ -5,7 +5,11 @@ const { createReadStream } = require('node:fs');
 const { resolve } = require('node:path');
 const path = require('node:path');
 
-const Tour = require('../models/tour');
+const needChangeModel = [
+  { model: require('../models/tour'), fileName: 'tours' },
+  { model: require('../models/user'), fileName: 'users' },
+  { model: require('../models/review'), fileName: 'reviews' },
+];
 
 // 识别.env中${}内容
 dotenvExpand.expand(
@@ -33,7 +37,7 @@ async function connectDatabase() {
   }
 }
 
-async function importTours() {
+async function importTours(Model, fileName) {
   return new Promise((resolve) => {
     try {
       const chunks = [];
@@ -41,7 +45,7 @@ async function importTours() {
 
       // 加载json文件  字符串方式 { encoding: 'utf8' }
       // buffer方式
-      const readable = createReadStream(path.resolve(__dirname, '..', './dev-data/data/tours.json'));
+      const readable = createReadStream(path.resolve(__dirname, '..', `./dev-data/data/${fileName}.json`));
 
       readable.on('data', (chunk) => {
         chunks.push(chunk);
@@ -49,11 +53,11 @@ async function importTours() {
       });
       readable.on('end', async () => {
         // 读取为二进制时使用connect 拼接成完整Buffer
-        await Tour.create(JSON.parse(Buffer.concat(chunks).toString('utf-8')));
+        await Model.create(JSON.parse(Buffer.concat(chunks).toString('utf-8')), { validateBeforeSave: false });
         // 字符串直接
         // await Tour.create(JSON.parse(toursStr));
         resolve();
-        console.log('数据新增成功 ✌️');
+        console.log('数据新增成功 ✌️ -> ', fileName);
       });
     } catch (err) {
       console.error(err.message);
@@ -61,17 +65,25 @@ async function importTours() {
   });
 }
 
-async function removeTours() {
-  const result = await Tour.deleteMany();
+async function removeTours(Model) {
+  const result = await Model.deleteMany();
   console.log(result, '数据库文档删除成功 ✌️');
 }
 
+function createPromises(fn) {
+  return needChangeModel.map((item) => fn(item.model, item.fileName));
+}
+
 connectDatabase().then(async (mongo) => {
+  let promises = [];
+
   if (process.argv[2] === 'import') {
-    await importTours();
+    promises = createPromises(importTours);
   } else {
-    await removeTours();
+    promises = createPromises(removeTours);
   }
+
+  await Promise.all(promises);
 
   await mongo.disconnect();
   console.log('数据库连接关闭成功 ✌️');

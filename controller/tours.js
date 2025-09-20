@@ -45,6 +45,7 @@ const checkCreateTour = (req, res, next) => {
 };
 
 const getAllTours = catchAsync(async (req, res) => {
+  // 默认分页5条数据
   const tourFeature = new APIFeature(Tour.find(), req.query).filter().sort().select().pagination();
   const tours = await tourFeature.query;
 
