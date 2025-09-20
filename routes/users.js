@@ -16,22 +16,29 @@ const { protect, restrictTo } = require('../controller/auth');
 
 const usersRouter = express.Router(authHandler.signup);
 
-// auth
 usersRouter.post('/signup', authHandler.signup).post('/login', authHandler.login);
 
 usersRouter
   .post('/forgot-password', authHandler.forgotPassword)
-  .patch('/reset-password/:resetToken', authHandler.resetPassword)
-  .patch('/update-password', authHandler.protect, authHandler.updatePassword)
-  .patch('/update-my-profile', authHandler.protect, updateMyProfile)
-  .delete('/del-my-profile', authHandler.protect, delMyProfile)
-  .get('/me', protect, getMeMiddleware, getUser);
+  .patch('/reset-password/:resetToken', authHandler.resetPassword);
 
-usersRouter.route('/').get(authHandler.protect, authHandler.restrictTo('admin'), getAllUsers).post(createUser);
+// ------- 以下必须登录才能访问 -------
+
+usersRouter.use(authHandler.protect);
+
+// TODO 用户更新自己信息
 usersRouter
-  .route('/:id')
-  .get(protect, restrictTo('admin'), getUser)
-  .patch(updateUser)
-  .delete(protect, restrictTo('admin'), delUser);
+  .patch('/update-my-profile', updateMyProfile)
+  .delete('/del-my-profile', delMyProfile)
+  .get('/me', getMeMiddleware, getUser)
+  .patch('/update-password', authHandler.updatePassword);
+
+// ----以下必须管理员才能访问----
+usersRouter.use(authHandler.restrictTo('admin'));
+
+// TODO 管理员创建用户 管理员更新用户信息
+usersRouter.route('/').post(createUser).get(authHandler.restrictTo('admin'), getAllUsers);
+
+usersRouter.route('/:id').get(protect, getUser).patch(protect, updateUser).delete(protect, delUser);
 
 module.exports = usersRouter;

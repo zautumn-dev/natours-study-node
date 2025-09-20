@@ -75,6 +75,9 @@ module.exports = {
     res.status(201).json({
       message: 'success',
       status: 201,
+      data: {
+        id: newUser._id,
+      },
     });
   }),
 

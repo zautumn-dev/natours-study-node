@@ -4,15 +4,16 @@ const { createReview, getAllReviews, delReview, setTourUserId } = require('../co
 
 const reviewRouter = express.Router({ mergeParams: true });
 
+reviewRouter.use(protect);
+
 reviewRouter
   .route('/:id')
-  .post(protect, restrictTo('user', 'admin', 'lead-guide'), setTourUserId, createReview)
-  .delete(protect, restrictTo('admin'), delReview);
+  .post(restrictTo('user', 'admin'), setTourUserId, createReview)
+  .delete(restrictTo('user', 'admin'), delReview);
 
 reviewRouter
   .route('/')
-  .get(protect, restrictTo('admin'), getAllReviews)
-  .post(protect, restrictTo('user', 'admin', 'lead-guide'), setTourUserId, createReview)
-  .get(protect, restrictTo('user', 'admin', 'lead-guide'), getAllReviews);
+  .get(restrictTo('admin'), getAllReviews)
+  .post(restrictTo('user', 'admin'), setTourUserId, createReview);
 
 module.exports = reviewRouter;

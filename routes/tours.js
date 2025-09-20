@@ -13,13 +13,19 @@ toursRouter.use('/:tourId/review', reviewRouter);
 
 toursRouter.route('/cheap-top-5').get(handler.aliasTopTour, handler.getAllTours);
 toursRouter.route('/state').get(handler.getTourState);
-toursRouter.route('/monthly-plan/:year').get(handler.getMonthlyPlan);
+toursRouter
+  .route('/monthly-plan/:year')
+  .get(protect, restrictTo('admin', 'lead-guide', 'guide'), handler.getMonthlyPlan);
 
-toursRouter.route('/').get(protect, handler.getAllTours).post(handler.checkCreateTour, handler.createTour);
+toursRouter
+  .route('/')
+  .get(handler.getAllTours)
+  .post(protect, restrictTo('admin', 'lead-guide'), handler.checkCreateTour, handler.createTour);
+
 toursRouter
   .route('/:id')
   .get(handler.getTour)
-  .patch(handler.updateTour)
+  .patch(protect, restrictTo('admin', 'lead-guide'), handler.updateTour)
   .delete(protect, restrictTo('admin', 'lead-guide'), handler.delTour);
 
 module.exports = toursRouter;
