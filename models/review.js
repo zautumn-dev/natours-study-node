@@ -38,7 +38,8 @@ const reviewSchema = new mongoose.Schema(
 );
 
 reviewSchema.pre(/^find/, function (next) {
-  this.populate('user', '-__v -passwordResetExpires -passwordResetToken').populate('tour', '-__v');
+  this.populate('user', '-__v -passwordResetExpires -passwordResetToken');
+  // .populate('tour', '-__v')
   next();
 });
 
