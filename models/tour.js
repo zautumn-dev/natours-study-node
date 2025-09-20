@@ -132,6 +132,10 @@ const TourShema = mongoose.Schema(
   },
 );
 
+// 自定义索引
+TourShema.index({ price: 1, ratingsAverage: -1 });
+TourShema.index({ slug: 1 });
+
 // 文档 中间件 pre 保存 创建之前执行 .save() .create()  update 不会执行
 TourShema.pre('save', function (next) {
   console.log('first  pre save middleware');
