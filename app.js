@@ -10,6 +10,7 @@ const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
 const AppError = require('./utils/appError');
 const errorhandler = require('./controller/error');
+const reviewRouter = require('./routes/review');
 
 const app = express();
 
@@ -58,8 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api/v1/tours', toursRouter);
-app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/tours', toursRouter).use('/api/v1/users', usersRouter).use('/api/v1/review', reviewRouter);
 
 // 所有路由都匹配不到时 对其他未识别的路由进行处理 . 定义 404 错误传递给最后的错误处理中间件
 app.all('*', (req, res, next) => {

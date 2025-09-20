@@ -118,7 +118,7 @@ const TourShema = mongoose.Schema(
     guides: [
       {
         type: mongoose.Schema.ObjectId,
-        ref: 'User', //  关联的模型名称 通过ref 关联到User模型 通过 .-->  populate() 方法进行关联查询
+        ref: 'user', //  关联的模型名称 通过ref 关联到User模型 通过 .-->  populate() 方法进行关联查询
       },
     ],
   },
@@ -160,7 +160,7 @@ TourShema.pre('save', function (next) {
 // });
 
 TourShema.pre(/^find/, function (next) {
-  this.find({ secretTour: { $ne: true } });
+  this.find({ secretTour: { $ne: true } }).populate('guides', '-__v -passwordChangeAt');
   // 添加属性
   this.startTime = Date.now();
   next();
@@ -170,10 +170,10 @@ TourShema.post(['find', 'findOne'], function (docs, next) {
   next();
 });
 
-TourShema.post('create', (doc, next) => {
-  console.log('this is post create middleware', doc);
-  next();
-});
+// TourShema.post('create', (doc, next) => {
+//   console.log('this is post create middleware', doc);
+//   next();
+// });
 
 TourShema.pre('aggregate', function (next) {
   // 给 聚合查询的 管道 添加 排除 secretTour 为true的条件
@@ -185,6 +185,6 @@ TourShema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
-const Tour = mongoose.model('Tour', TourShema);
+const Tour = mongoose.model('tour', TourShema);
 
 module.exports = Tour;

@@ -63,10 +63,10 @@ const getTour = catchAsync(async (req, res, next) => {
   // const tour = await Tour.findById(id);
 
   // findOne
-  const tourList = await Tour.find({ _id: id });
-  if (!tourList.length) return next(new AppError(`no tour found with that ${id}`, 404));
+  const tour = await Tour.findById(id);
+  console.log(tour);
 
-  const tour = Reflect.get(tourList, 0);
+  if (!tour) return next(new AppError(`no tour found with that ${id}`, 404));
 
   res.json({
     status: 200,
