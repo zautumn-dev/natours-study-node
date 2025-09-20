@@ -3,10 +3,11 @@ const Review = require('../models/review');
 
 const reviewController = {
   createReview: catchAsync(async (req, res, next) => {
+    if (!req.body.user) req.body.user = req.user._id;
+    if (!req.body.tour) req.body.tour = req.params.tourId;
+    console.log(req.body);
     const review = await Review.create({
       ...req.body,
-      user: req.user._id,
-      tour: req.params.id,
     });
     res.status(201).json({
       status: 201,
