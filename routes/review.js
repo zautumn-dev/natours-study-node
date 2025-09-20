@@ -9,6 +9,7 @@ reviewRouter.route('/:id').post(protect, restrictTo('user', 'admin', 'lead-guide
 reviewRouter
   .route('/')
   .get(protect, restrictTo('admin'), getAllReviews)
-  .post(protect, restrictTo('user', 'admin', 'lead-guide'), createReview);
+  .post(protect, restrictTo('user', 'admin', 'lead-guide'), createReview)
+  .get(protect, restrictTo('user', 'admin', 'lead-guide'), getAllReviews);
 
 module.exports = reviewRouter;

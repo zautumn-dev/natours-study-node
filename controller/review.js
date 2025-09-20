@@ -19,7 +19,8 @@ const reviewController = {
   }),
 
   getAllReviews: catchAsync(async (req, res, next) => {
-    const reviews = await Review.find();
+    const reviewQuery = req.params.tourId ? { tour: req.params.tourId } : {};
+    const reviews = await Review.find(reviewQuery);
 
     res.status(200).json({
       status: 200,
