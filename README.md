@@ -6,7 +6,57 @@
  npm i -D eslint eslint-config-prettier eslint-plugin-prettier eslint-config-airbnb eslint-plugin-node eslint-plugin-import eslint-plugin-jsx-a11y eslint-plugin-react
 ```
 
-## git commit 提交规范
+## WebStorm macOS 快捷键键盘布局
+
+### ⌘（Command）相关
+
+| 键位             | 功能        |
+|----------------|-----------|
+| ⌘ + D          | 复制当前行到下一行 |
+| ⌘ + ⌫          | 删除当前行     |
+| ⌘ + /          | 注释/取消注释行  |
+| ⌘ + O          | 查找类       |
+| ⇧ + ⌘ + O      | 查找文件      |
+| ⌥ + ⌘ + O      | 查找符号      |
+| ⇧ + ⌘ + F      | 全局查找      |
+| ⇧ + ⌘ + R      | 全局替换      |
+| ⌥ + ⌘ + L      | 格式化代码     |
+| ⌘ + B / ⌘ + 点击 | 跳转到定义     |
+
+---
+
+### ⌥（Option / Alt）相关
+
+| 键位            | 功能        |
+|---------------|-----------|
+| ⌥ + ⇧ + ↑ / ↓ | 移动行上下     |
+| ⌥ + ⌘ + /     | 块注释       |
+| ⌥ + ⌘ + 鼠标拖动  | 矩形多选（列选择） |
+| ⌘ + ⌥ + R     | 调试时继续运行   |
+
+---
+
+### ⌃（Control）相关
+
+| 键位        | 功能        |
+|-----------|-----------|
+| ⌃ + G     | 选中下一个相同单词 |
+| ⌃ + ⇧ + G | 取消上一个多选   |
+| ⌃ + ⌘ + G | 选中所有相同单词  |
+| ⌃ + ⇧ + J | 合并下一行到当前行 |
+| ⌃ + R     | 运行        |
+| ⌃ + D     | 调试        |
+
+---
+
+### 功能键（F 区域）
+
+| 键位 | 功能            |
+|----|---------------|
+| F7 | 步入（Step Into） |
+| F8 | 步过（Step Over） |
+
+**## git commit 提交规范
 
 [Commit message 和 Change log 编写指南](https://www.ruanyifeng.com/blog/2016/01/commit_message_change_log.html)
 
@@ -18,9 +68,9 @@
 - style： 格式（不影响代码运行的变动）
 - refactor：重构（即不是新增功能，也不是修改bug的代码变动）
 - test：增加测试
-- chore：构建过程或辅助工具的变动
+- chore：构建过程或辅助工具的变动**
 
-## emoji 对照表
+### emoji 对照表
 
 | emoji      | emoji 代码                      | commit 说明       |
 |------------|-------------------------------|-----------------|
