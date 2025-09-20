@@ -42,13 +42,6 @@ function createUser(req, res) {
   });
 }
 
-function getUser(req, res) {
-  res.status(500).json({
-    status: 500,
-    message: 'This route is not yet defined!',
-  });
-}
-
 const updateMyProfile = catchAsync(async (req, res, next) => {
   // 排除password passwordConfirm
   const { body, user } = req;
@@ -93,11 +86,15 @@ const userController = {
     });
   }),
   delUser: handlerFactory.delOne(User),
+  getMeMiddleware: (req, res, next) => {
+    req.params.id = req.user._id;
+    next();
+  },
+  getUser: handlerFactory.getOne(User),
 };
 
 module.exports = {
   getAllUsers,
-  getUser,
   updateUser,
   createUser,
   updateMyProfile,

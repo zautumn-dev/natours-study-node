@@ -1,5 +1,6 @@
 const catchAsync = require('./catchAsync');
 const AppError = require('./appError');
+const Tour = require('../models/tour');
 
 exports.delOne = (Model) =>
   catchAsync(async (req, res, next) => {
@@ -27,5 +28,24 @@ exports.createOne = (Model) =>
       data: {
         id: doc._id,
       },
+    });
+  });
+
+exports.getOne = (Model, popOptions) =>
+  catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+
+    let model = Model.findById(id);
+
+    if (popOptions) model = model.populate(popOptions);
+
+    model = await model;
+
+    if (!model) return next(new AppError(`no tour found with that ${id}`, 404));
+
+    res.json({
+      status: 200,
+      message: 'success',
+      data: model,
     });
   });

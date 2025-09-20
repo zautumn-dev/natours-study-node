@@ -58,23 +58,7 @@ const getAllTours = catchAsync(async (req, res) => {
   });
 });
 
-const getTour = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-
-  // const tour = await Tour.findById(id);
-
-  // findOne
-
-  const tour = await Tour.findById(id).populate('reviews');
-
-  if (!tour) return next(new AppError(`no tour found with that ${id}`, 404));
-
-  res.json({
-    status: 200,
-    message: 'success',
-    data: tour,
-  });
-});
+const getTour = handlerFactory.getOne(Tour, 'reviews');
 
 const createTour = catchAsync(async (req, res) => {
   const newTour = await Tour.create(req.body);
